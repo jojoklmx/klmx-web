@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Order - KLMX Konveksi & Sablon Depok</title>
+    <style>
+        :root {
+            --navy: #1B2A4A; --orange: #F47B20; --green: #4CAF50;
+            --light: #F5F6FA; --gray: #6B7280; --white: #FFFFFF;
+            --border: #E5E7EB; --radius: 10px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--light); color: #111;
+            line-height: 1.6;
+        }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        
+        .header {
+            background: linear-gradient(135deg, var(--navy), #2A3F6E);
+            color: white; text-align: center; padding: 30px 20px;
+            border-radius: 0 0 var(--radius) var(--radius);
+            margin-bottom: 24px;
+        }
+        .header h1 { font-size: 1.6rem; margin-bottom: 4px; }
+        .header .sub { opacity: 0.8; font-size: 0.9rem; }
+        
+        .progress {
+            display: flex; gap: 0; margin-bottom: 24px;
+            background: white; border-radius: var(--radius);
+            overflow: hidden; border: 1px solid var(--border);
+        }
+        .progress .step {
+            flex: 1; text-align: center; padding: 10px;
+            font-size: 0.8rem; font-weight: 600; color: var(--gray);
+            background: white; position: relative;
+        }
+        .progress .step.active { color: var(--orange); background: #FFF3E0; }
+        .progress .step.done { color: var(--green); background: #E8F5E9; }
+        
+        .card {
+            background: white; border-radius: var(--radius);
+            padding: 24px; border: 1px solid var(--border);
+            margin-bottom: 16px;
+        }
+        .card h3 {
+            font-size: 1.1rem; color: var(--navy);
+            margin-bottom: 16px; padding-bottom: 8px;
+            border-bottom: 2px solid var(--orange);
+        }
+        
+        .form-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+        .form-group { flex: 1; min-width: 180px; margin-bottom: 12px; }
+        .form-group label {
+            display: block; font-size: 0.85rem; font-weight: 600;
+            color: var(--navy); margin-bottom: 4px;
+        }
+        .form-group label .req { color: #E53935; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px 12px; border: 1px solid var(--border);
+            border-radius: 8px; font-size: 0.95rem; font-family: inherit;
+            transition: all 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none; border-color: var(--orange);
+            box-shadow: 0 0 0 3px rgba(244,123,32,0.1);
+        }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        
+        .moq-warning {
+            background: #FFF3E0; border: 1px solid #FFB74D;
+            border-radius: 8px; padding: 10px 14px;
+            font-size: 0.85rem; color: #E65100; margin-bottom: 12px;
+            display: none;
+        }
+        .moq-warning.show { display: block; }
+        
+        .size-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+            gap: 8px;
+        }
+        .size-grid .size-box {
+            text-align: center;
+        }
+        .size-grid .size-box label {
+            display: block; font-size: 0.75rem; font-weight: 700;
+            color: var(--navy); margin-bottom: 2px;
+        }
+        .size-grid .size-box input {
+            width: 100%; text-align: center; padding: 6px;
+        }
+        
+        .summary-box {
+            background: #E8F5E9; border: 1px solid #66BB6A;
+            border-radius: var(--radius); padding: 16px;
+            margin-top: 12px;
+        }
+        .summary-box h4 { color: #2E7D32; margin-bottom: 8px; }
+        .summary-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.9rem; }
+        .summary-row.total { font-weight: 800; font-size: 1.1rem; border-top: 1px solid #A5D6A7; padding-top: 8px; margin-top: 4px; }
+        
+        .btn-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+        .btn {
+            padding: 12px 28px; border: none; border-radius: 50px;
+            font-weight: 700; font-size: 1rem; cursor: pointer;
+            transition: all 0.2s; text-align: center;
+        }
+        .btn-primary { background: var(--orange); color: white; flex: 2; }
+        .btn-primary:hover { background: #D65D0E; transform: translateY(-1px); }
+        .btn-outline { background: white; color: var(--navy); border: 2px solid var(--navy); flex: 1; }
+        .btn-wa { background: #25D366; color: white; flex: 2; }
+        .btn-wa:hover { background: #1EBE5A; }
+        
+        @media (max-width: 600px) {
+            .container { padding: 10px; }
+            .card { padding: 16px; }
+            .header h1 { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>📋 Form Order Konveksi</h1>
+        <div class="sub">KLMX Konveksi & Sablon Depok — Isi form untuk dapat quotation</div>
+    </div>
+
+    <div class="progress">
+        <div class="step done" id="step1">1. Data Pemesan</div>
+        <div class="step active" id="step2">2. Produk</div>
+        <div class="step" id="step3">3. Review</div>
+    </div>
+
+    <!-- SECTION 1: DATA PEMESAN -->
+    <div class="card" id="sec1">
+        <h3>📝 Data Pemesan</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label><span class="req">*</span> Nama / Perusahaan</label>
+                <input type="text" id="nama" placeholder="Contoh: PT Maju Jaya / Bapak Budi">
+            </div>
+            <div class="form-group">
+                <label><span class="req">*</span> WhatsApp / Telepon</label>
+                <input type="text" id="telp" placeholder="Contoh: 0812-xxxx-xxxx">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="email" placeholder="opsional@email.com">
+            </div>
+            <div class="form-group">
+                <label>Instansi / Komunitas</label>
+                <select id="tipe_pelanggan">
+                    <option value="">Pilih jenis...</option>
+                    <option>Perusahaan / Korporasi</option>
+                    <option>Instansi Pemerintah / BUMN</option>
+                    <option>Sekolah / Universitas</option>
+                    <option>Komunitas / Organisasi</option>
+                    <option>Event Organizer</option>
+                    <option>Perorangan</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 2: PRODUK -->
+    <div class="card" id="sec2">
+        <h3>👕 Detail Produk</h3>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label><span class="req">*</span> Jenis Produk</label>
+                <select id="produk" onchange="updateForm()">
+                    <option value="">Pilih produk...</option>
+                    <option value="kaos">Kaos Oblong / T-Shirt</option>
+                    <option value="polo">Kaos Polo</option>
+                    <option value="kemeja">Kemeja / PDH</option>
+                    <option value="jaket">Jaket / Rompi</option>
+                    <option value="hoodie">Hoodie / Sweater</option>
+                    <option value="seragam">Set Seragam Olahraga</option>
+                    <option value="wearpack">Wearpack / Seragam Lapangan</option>
+                    <option value="totebag">Totebag / Goodie Bag</option>
+                    <option value="lainnya">Lainnya (sebutkan)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label><span class="req">*</span> Bahan</label>
+                <select id="bahan">
+                    <option value="">Pilih bahan...</option>
+                    <option>Cotton Combed 30s</option>
+                    <option>Cotton Combed 24s</option>
+                    <option>Dry Fit / Micro</option>
+                    <option>PE (Polyester)</option>
+                    <option>CVC</option>
+                    <option>Pique (Polo)</option>
+                    <option>Lacoste (Polo)</option>
+                    <option>Oxford (Kemeja)</option>
+                    <option>Taipan (Kemeja)</option>
+                    <option>Drill</option>
+                    <option>Taslan (Jaket)</option>
+                    <option>Parachute (Jaket)</option>
+                    <option>Fleece (Hoodie)</option>
+                    <option>Canvas (Totebag)</option>
+                    <option>Belum Tahu / Konsultasi</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label><span class="req">*</span> Jumlah Order</label>
+                <input type="number" id="jumlah" min="1" placeholder="Min. 12 pcs (1 lusin)" onchange="checkMOQ()">
+                <div class="moq-warning" id="moqWarn">⚠ Minimum order 12 pcs (1 lusin). Harga grosir berlaku.</div>
+            </div>
+            <div class="form-group">
+                <label>Jenis Sablon / Teknik</label>
+                <select id="teknik">
+                    <option value="">Pilih teknik...</option>
+                    <option>Sablon DTF Full Color</option>
+                    <option>Sablon DTG</option>
+                    <option>Bordir Komputer 3D</option>
+                    <option>Cutting Polyflex</option>
+                    <option>Sablon Rubber</option>
+                    <option>Kombinasi Sablon + Bordir</option>
+                    <option>Belum Tahu / Konsultasi</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="card" style="background:#FAFAFA; margin-top:8px;">
+            <label style="font-weight:700; color:var(--navy); font-size:0.85rem;">📐 Breakdown Ukuran (isi jumlah per ukuran)</label>
+            <div class="size-grid" style="margin-top:8px;">
+                <div class="size-box"><label>S</label><input type="number" id="sz_s" min="0" value="0"></div>
+                <div class="size-box"><label>M</label><input type="number" id="sz_m" min="0" value="0"></div>
+                <div class="size-box"><label>L</label><input type="number" id="sz_l" min="0" value="0"></div>
+                <div class="size-box"><label>XL</label><input type="number" id="sz_xl" min="0" value="0"></div>
+                <div class="size-box"><label>XXL</label><input type="number" id="sz_xxl" min="0" value="0"></div>
+                <div class="size-box"><label>XXXL</label><input type="number" id="sz_xxxl" min="0" value="0"></div>
+                <div class="size-box"><label>Anak</label><input type="number" id="sz_anak" min="0" value="0"></div>
+            </div>
+            <div id="sizeTotal" style="font-size:0.8rem; color:var(--gray); margin-top:8px;">Total ukuran: 0 pcs</div>
+        </div>
+
+        <div class="form-row" style="margin-top:12px;">
+            <div class="form-group">
+                <label>Warna Dasar</label>
+                <input type="text" id="warna" placeholder="Contoh: Hitam, Putih, Navy, Custom">
+            </div>
+            <div class="form-group">
+                <label>Deadline</label>
+                <input type="date" id="deadline">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Detail Desain / Logo</label>
+            <textarea id="desain" placeholder="Jelaskan desain yang diinginkan: jumlah warna sablon, posisi logo (dada kiri / punggung / full print), ukuran sablon, dll. Bisa upload mockup via WhatsApp setelah submit."></textarea>
+        </div>
+    </div>
+
+    <!-- SECTION 3: SUMMARY -->
+    <div class="card" id="sec3" style="display:none;">
+        <h3>📊 Ringkasan Order</h3>
+        <div class="summary-box">
+            <h4>Estimasi Biaya</h4>
+            <div class="summary-row"><span>Jenis Produk:</span><span id="sumProduk">-</span></div>
+            <div class="summary-row"><span>Jumlah:</span><span id="sumJumlah">-</span></div>
+            <div class="summary-row"><span>Estimasi Harga/pcs:</span><span id="sumHarga">-</span></div>
+            <div class="summary-row total"><span>Total Estimasi:</span><span id="sumTotal">-</span></div>
+            <div style="font-size:0.75rem;color:var(--gray);margin-top:8px;">* Harga final ditentukan setelah review desain & bahan. Quotation resmi via WhatsApp.</div>
+        </div>
+    </div>
+
+    <!-- BUTTONS -->
+    <div class="btn-row">
+        <button class="btn btn-outline" onclick="window.print()">🖨 Cetak Form</button>
+        <button class="btn btn-wa" onclick="submitWA()">📲 Kirim via WhatsApp</button>
+    </div>
+
+    <div style="text-align:center; margin-top:16px; color:var(--gray); font-size:0.8rem;">
+        📍 Jl. Kartini, Sukmajaya, Depok | 📞 0896-3776-7678 | ✉ jojoklmx@gmail.com
+    </div>
+</div>
+
+<script>
+function updateForm() {
+    var p = document.getElementById('produk').value;
+    var h = document.getElementById('sec3');
+    if (p) h.style.display = 'block';
+    updateSummary();
+}
+
+function checkMOQ() {
+    var j = parseInt(document.getElementById('jumlah').value) || 0;
+    document.getElementById('moqWarn').className = (j > 0 && j < 12) ? 'moq-warning show' : 'moq-warning';
+    updateSummary();
+}
+
+function updateSummary() {
+    var p = document.getElementById('produk');
+    var j = parseInt(document.getElementById('jumlah').value) || 0;
+    var harga = 0;
+    var nama = p.options[p.selectedIndex].text;
+    
+    var priceMap = {
+        'kaos': 65000, 'polo': 85000, 'kemeja': 95000,
+        'jaket': 135000, 'hoodie': 120000, 'seragam': 130000,
+        'wearpack': 110000, 'totebag': 35000
+    };
+    
+    if (p.value && priceMap[p.value]) {
+        harga = priceMap[p.value];
+        if (j >= 120) harga = Math.round(harga * 0.7);
+        else if (j >= 36) harga = Math.round(harga * 0.85);
+    }
+    
+    document.getElementById('sumProduk').textContent = nama || '-';
+    document.getElementById('sumJumlah').textContent = j ? j + ' pcs' : '-';
+    document.getElementById('sumHarga').textContent = harga ? 'Rp ' + harga.toLocaleString('id') + '/pcs' : '-';
+    document.getElementById('sumTotal').textContent = (j && harga) ? 'Rp ' + (j*harga).toLocaleString('id') : '-';
+}
+
+// Auto-update size total
+['sz_s','sz_m','sz_l','sz_xl','sz_xxl','sz_xxxl','sz_anak'].forEach(function(id){
+    document.getElementById(id).addEventListener('input', function(){
+        var total = 0;
+        ['sz_s','sz_m','sz_l','sz_xl','sz_xxl','sz_xxxl','sz_anak'].forEach(function(sid){
+            total += parseInt(document.getElementById(sid).value) || 0;
+        });
+        document.getElementById('sizeTotal').textContent = 'Total ukuran: ' + total + ' pcs';
+    });
+});
+
+function submitWA() {
+    var nama = document.getElementById('nama').value.trim();
+    var telp = document.getElementById('telp').value.trim();
+    var produk = document.getElementById('produk');
+    var produkNama = produk.options[produk.selectedIndex].text;
+    var jumlah = document.getElementById('jumlah').value;
+    var bahan = document.getElementById('bahan').value;
+    var teknik = document.getElementById('teknik').value;
+    var warna = document.getElementById('warna').value;
+    var deadline = document.getElementById('deadline').value;
+    var desain = document.getElementById('desain').value;
+    var tipe = document.getElementById('tipe_pelanggan').value;
+    
+    if (!nama) { alert('Nama / Perusahaan harus diisi!'); return; }
+    if (!telp) { alert('WhatsApp harus diisi!'); return; }
+    if (!produk.value) { alert('Pilih jenis produk!'); return; }
+    if (!jumlah || parseInt(jumlah) < 1) { alert('Jumlah order harus diisi!'); return; }
+    
+    // Size breakdown
+    var sizes = [];
+    ['S','M','L','XL','XXL','XXXL','Anak'].forEach(function(s,i){
+        var v = parseInt(document.getElementById(['sz_s','sz_m','sz_l','sz_xl','sz_xxl','sz_xxxl','sz_anak'][i]).value) || 0;
+        if (v > 0) sizes.push(s + ':' + v);
+    });
+    
+    var msg = '*ORDER KONVEKSI - KLMX*\n\n';
+    msg += '*Pemesan:* ' + nama + '\n';
+    if (tipe) msg += '*Tipe:* ' + tipe + '\n';
+    msg += '*Telp:* ' + telp + '\n';
+    msg += '\n*PRODUK*\n';
+    msg += '*Jenis:* ' + produkNama + '\n';
+    msg += '*Jumlah:* ' + jumlah + ' pcs\n';
+    if (bahan) msg += '*Bahan:* ' + bahan + '\n';
+    if (teknik) msg += '*Teknik:* ' + teknik + '\n';
+    if (warna) msg += '*Warna:* ' + warna + '\n';
+    if (deadline) msg += '*Deadline:* ' + deadline + '\n';
+    if (sizes.length) msg += '*Ukuran:* ' + sizes.join(', ') + '\n';
+    if (desain) msg += '\n*Desain:* ' + desain + '\n';
+    
+    var wa = '6289637767678';
+    window.open('https://wa.me/' + wa + '?text=' + encodeURIComponent(msg), '_blank');
+}
+
+// Enter key on jumlah field triggers summary
+document.getElementById('jumlah').addEventListener('keyup', function(e){
+    updateSummary();
+});
+</script>
+</body>
+</html>
