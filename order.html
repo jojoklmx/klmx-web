@@ -301,17 +301,44 @@
         <div class="preview-grid" id="previewGrid"></div>
     </div>
 
-    <!-- SECTION 3: SUMMARY -->
+    <!-- SECTION 3: PEMBAYARAN -->
     <div class="card" id="sec3" style="display:none;">
-        <h3>📊 Ringkasan Order</h3>
-        <div class="summary-box">
-            <h4>Estimasi Biaya</h4>
-            <div class="summary-row"><span>Jenis Produk:</span><span id="sumProduk">-</span></div>
-            <div class="summary-row"><span>Jumlah:</span><span id="sumJumlah">-</span></div>
-            <div class="summary-row"><span>Estimasi Harga/pcs:</span><span id="sumHarga">-</span></div>
-            <div class="summary-row total"><span>Total Estimasi:</span><span id="sumTotal">-</span></div>
-            <div style="font-size:0.75rem;color:var(--gray);margin-top:8px;">* Harga final ditentukan setelah review desain & bahan. Quotation resmi via WhatsApp.</div>
+        <h3>💰 Ringkasan & Pembayaran</h3>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label><span class="req">*</span> Jenis Produk</label>
+                <input type="text" id="sumProduk" readonly style="background:#F5F6FA;font-weight:bold;color:#1B2A4A;">
+            </div>
+            <div class="form-group">
+                <label><span class="req">*</span> Harga Satuan (Rp)</label>
+                <input type="number" id="hargaSatuan" placeholder="Harga per pcs" onchange="calcPayment()" min="0">
+            </div>
         </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label><span class="req">*</span> Jumlah Order (pcs)</label>
+                <input type="number" id="sumJumlah" readonly style="background:#F5F6FA;font-weight:bold;color:#1B2A4A;">
+            </div>
+            <div class="form-group">
+                <label><span class="req">*</span> Total Pembayaran</label>
+                <input type="text" id="sumTotal" readonly style="background:#E8F5E9;font-weight:bold;font-size:1.1rem;color:#2E7D32;">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label><span class="req">*</span> Uang Muka / DP (Rp)</label>
+                <input type="number" id="uangMuka" placeholder="Min. 50% dari total" onchange="calcPayment()" min="0">
+            </div>
+            <div class="form-group">
+                <label>Sisa Pembayaran</label>
+                <input type="text" id="sisaBayar" readonly style="background:#FFF3E0;font-weight:bold;font-size:1.1rem;color:#E65100;">
+            </div>
+        </div>
+
+        <div style="font-size:0.75rem;color:var(--gray);margin-top:4px;">* Harga satuan bisa diedit manual. Uang muka minimal 50% dari total. Pelunasan saat barang jadi.</div>
     </div>
 
     <!-- BUTTONS -->
@@ -331,12 +358,15 @@ function updateForm() {
     var p = document.getElementById('produk').value;
     var h = document.getElementById('sec3');
     if (p) h.style.display = 'block';
+    var pEl = document.getElementById('produk');
+    document.getElementById('sumProduk').value = p ? pEl.options[pEl.selectedIndex].text : '';
     updateSummary();
 }
 
 function checkMOQ() {
     var j = parseInt(document.getElementById('jumlah').value) || 0;
     document.getElementById('moqWarn').className = (j > 0 && j < 12) ? 'moq-warning show' : 'moq-warning';
+    document.getElementById('sumJumlah').value = j || '';
     updateSummary();
 }
 
@@ -358,10 +388,11 @@ function updateSummary() {
         else if (j >= 36) harga = Math.round(harga * 0.85);
     }
     
-    document.getElementById('sumProduk').textContent = nama || '-';
-    document.getElementById('sumJumlah').textContent = j ? j + ' pcs' : '-';
-    document.getElementById('sumHarga').textContent = harga ? 'Rp ' + harga.toLocaleString('id') + '/pcs' : '-';
-    document.getElementById('sumTotal').textContent = (j && harga) ? 'Rp ' + (j*harga).toLocaleString('id') : '-';
+    document.getElementById('sumJumlah').value = j || '';
+    if (harga && !document.getElementById('hargaSatuan').value) {
+        document.getElementById('hargaSatuan').value = harga;
+    }
+    calcPayment();
 }
 
 let designImages = [];
@@ -445,6 +476,11 @@ function exportPDF() {
         imgTags += '<img src="' + designImages[j].data + '" style="max-width:180px;max-height:140px;margin:4px;border:1px solid #ddd;border-radius:4px;">';
     }
     
+    var hargaS = document.getElementById('hargaSatuan').value;
+    var uangM = document.getElementById('uangMuka').value;
+    var sisaB = document.getElementById('sisaBayar').value;
+    var sumTotal = document.getElementById('sumTotal').value;
+
     var now = new Date().toLocaleDateString('id-ID', {year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit'});
     
     var pdfHTML = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>KLMX Order Form</title><style>' +
@@ -478,6 +514,11 @@ function exportPDF() {
         (sizeBreakdown.length ? '<p><span class="label">Ukuran:</span> ' + sizeBreakdown.join(', ') + '</p>' : '') +
         (desain ? '<p><span class="label">Catatan:</span> ' + desain + '</p>' : '') +
         '</div>' +
+        (sumTotal ? '<div class="section" style="border:2px solid #F47B20;background:#FFF8F0;"><p class="label" style="font-size:1.1rem;">PEMBAYARAN</p>' +
+        (hargaS ? '<p><span class="label">Harga Satuan:</span> Rp ' + parseInt(hargaS).toLocaleString('id') + ' /pcs</p>' : '') +
+        '<p><span class="label">Total Pembayaran:</span> ' + sumTotal + '</p>' +
+        (uangM && parseInt(uangM) > 0 ? '<p><span class="label">Uang Muka (DP):</span> Rp ' + parseInt(uangM).toLocaleString('id') + '</p><p><span class="label">Sisa Pembayaran:</span> ' + sisaB + '</p>' : '<p style="color:#E65100;font-size:0.85rem;">* DP minimal 50% saat order, pelunasan saat barang jadi.</p>') +
+        '</div>' : '') +
         (imgTags ? '<div class="section"><p class="label">&#x1F5BC; Desain Terlampir:</p><div class="images">' + imgTags + '</div></div>' : '') +
         '<div class="footer">KLMX Konveksi & Sablon | Jl. Kartini, Sukmajaya, Depok | WA: 0896-3776-7678 | jojoklmx@gmail.com</div>' +
         '</body></html>';
@@ -492,6 +533,17 @@ function exportPDF() {
     alert('Order tersimpan! Buka file .html lalu Ctrl+P > Save as PDF untuk simpan sebagai PDF resmi.');
 }
 
+
+function calcPayment() {
+    var harga = parseInt(document.getElementById('hargaSatuan').value) || 0;
+    var jumlah = parseInt(document.getElementById('sumJumlah').value) || 0;
+    var total = harga * jumlah;
+    document.getElementById('sumTotal').value = total ? 'Rp ' + total.toLocaleString('id') : '';
+    
+    var dp = parseInt(document.getElementById('uangMuka').value) || 0;
+    var sisa = total - dp;
+    document.getElementById('sisaBayar').value = (total && dp) ? 'Rp ' + sisa.toLocaleString('id') : (total ? 'Rp ' + total.toLocaleString('id') + ' (belum ada DP)' : '');
+}
 
 // Auto-update size total
 ['sz_s','sz_m','sz_l','sz_xl','sz_xxl','sz_xxxl','sz_anak'].forEach(function(id){
@@ -543,12 +595,27 @@ function submitWA() {
     if (sizes.length) msg += '*Ukuran:* ' + sizes.join(', ') + '\n';
     if (desain) msg += '\n*Desain:* ' + desain + '\n';
     
+    var hargaS = document.getElementById('hargaSatuan').value;
+    var totalP = document.getElementById('sumTotal').value;
+    var uangM = document.getElementById('uangMuka').value;
+    var sisaB = document.getElementById('sisaBayar').value;
+    if (totalP) {
+        msg += '\n*PEMBAYARAN*\n';
+        if (hargaS) msg += '*Harga/pcs:* Rp ' + parseInt(hargaS).toLocaleString('id') + '\n';
+        msg += '*Total:* ' + totalP + '\n';
+        if (uangM && parseInt(uangM) > 0) {
+            msg += '*Uang Muka:* Rp ' + parseInt(uangM).toLocaleString('id') + '\n';
+            msg += '*Sisa:* ' + sisaB + '\n';
+        }
+    }
+    
     var wa = '6289637767678';
     window.open('https://wa.me/' + wa + '?text=' + encodeURIComponent(msg), '_blank');
 }
 
 // Enter key on jumlah field triggers summary
 document.getElementById('jumlah').addEventListener('keyup', function(e){
+    document.getElementById('sumJumlah').value = this.value || '';
     updateSummary();
 });
 </script>
