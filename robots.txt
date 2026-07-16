@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://jojoklmx.github.io/klmx-web/sitemap.xml
