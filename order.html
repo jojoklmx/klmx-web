@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Form Order - KLMX Konveksi & Sablon Depok</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#1B2A4A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KLMX Order">
+    <link rel="apple-touch-icon" href="https://jojoklmx.github.io/klmx-web/icon-192.png">
+    <link rel="manifest" href="https://jojoklmx.github.io/klmx-web/manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
     <style>
         :root {
             --navy: #1B2A4A; --orange: #F47B20; --green: #4CAF50;
@@ -113,6 +122,32 @@
         .btn-wa { background: #25D366; color: white; flex: 2; }
         .btn-wa:hover { background: #1EBE5A; }
         
+
+        .upload-area {
+            border: 2px dashed #F47B20; border-radius: var(--radius);
+            padding: 24px; text-align: center; cursor: pointer;
+            background: #FFF8F0; transition: all 0.2s;
+            margin-top: 12px;
+        }
+        .upload-area:hover { background: #FFF0E0; border-color: #D65D0E; }
+        .upload-area.dragover { background: #FFE0C0; border-color: #D65D0E; }
+        .upload-area .icon { font-size: 2rem; }
+        .preview-grid {
+            display: flex; flex-wrap: wrap; gap: 8px;
+            margin-top: 12px;
+        }
+        .preview-item {
+            position: relative; border: 1px solid var(--border);
+            border-radius: 8px; overflow: hidden; width: 120px;
+        }
+        .preview-item img { width: 120px; height: 100px; object-fit: cover; display: block; }
+        .preview-item .del {
+            position: absolute; top: 2px; right: 2px;
+            background: #E53935; color: white; border: none;
+            border-radius: 50%; width: 22px; height: 22px;
+            font-size: 14px; cursor: pointer; line-height: 22px; text-align: center;
+        }
+
 
         .upload-area {
             border: 2px dashed #F47B20; border-radius: var(--radius);
@@ -353,6 +388,7 @@
     <div class="btn-row">
         <button class="btn btn-outline" onclick="window.print()">🖨 Cetak Form</button>
         <button class="btn btn-outline" onclick="exportPDF()" style="border-color:#66BB6A;color:#2E7D32;">📥 Download PDF</button>
+        <button class="btn btn-outline" onclick="exportPDF()" style="border-color:#66BB6A;color:#2E7D32;">📥 Download PDF</button>
         <button class="btn btn-wa" onclick="submitWA()">📲 Kirim via WhatsApp</button>
     </div>
 
@@ -401,6 +437,177 @@ function updateSummary() {
         document.getElementById('hargaSatuan').value = harga;
     }
     calcPayment();
+}
+
+let designImages = [];
+
+function handleFiles(files) {
+    for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+        if (designImages.length >= 5) { alert('Maksimal 5 file!'); break; }
+        if (!file.type.startsWith('image/')) continue;
+        
+        var reader = new FileReader();
+        reader.onload = (function(f) {
+            return function(e) {
+                designImages.push({name: f.name, data: e.target.result});
+                renderPreviews();
+            };
+        })(file);
+        reader.readAsDataURL(file);
+    }
+    document.getElementById('fileInput').value = '';
+}
+
+function renderPreviews() {
+    var grid = document.getElementById('previewGrid');
+    grid.innerHTML = '';
+    for (var i = 0; i < designImages.length; i++) {
+        var img = designImages[i];
+        var div = document.createElement('div');
+        div.className = 'preview-item';
+        div.innerHTML = '<img src="' + img.data + '" alt="' + img.name + '">' +
+            '<button class="del" onclick="removeImage(' + i + ')">&times;</button>' +
+            '<div style="font-size:0.65rem;padding:2px 4px;color:var(--gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + img.name + '</div>';
+        grid.appendChild(div);
+    }
+}
+
+function removeImage(i) {
+    designImages.splice(i, 1);
+    renderPreviews();
+}
+
+(function() {
+    var ua = document.getElementById('uploadArea');
+    if (ua) {
+        ua.addEventListener('dragover', function(e) { e.preventDefault(); ua.classList.add('dragover'); });
+        ua.addEventListener('dragleave', function() { ua.classList.remove('dragover'); });
+        ua.addEventListener('drop', function(e) {
+            e.preventDefault();
+            ua.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+    }
+})();
+
+function exportPDF() {
+    var nama = document.getElementById('nama').value.trim();
+    if (!nama) { alert('Nama / Perusahaan harus diisi!'); return; }
+    
+    var produk = document.getElementById('produk');
+    var produkText = produk.options[produk.selectedIndex].text;
+    var jumlah = document.getElementById('jumlah').value;
+    var bahan = document.getElementById('bahan').value;
+    var teknik = document.getElementById('teknik').value;
+    var warna = document.getElementById('warna').value;
+    var deadline = document.getElementById('deadline').value;
+    var desain = document.getElementById('desain').value;
+    var telp = document.getElementById('telp').value;
+    var email = document.getElementById('email').value;
+    var tipe = document.getElementById('tipe_pelanggan').value;
+    
+    var sizeBreakdown = [];
+    var szIds = ['sz_s','sz_m','sz_l','sz_xl','sz_xxl','sz_xxxl','sz_anak'];
+    var szLabels = ['S','M','L','XL','XXL','XXXL','Anak'];
+    for (var i = 0; i < szLabels.length; i++) {
+        var v = parseInt(document.getElementById(szIds[i]).value) || 0;
+        if (v > 0) sizeBreakdown.push(szLabels[i] + ':' + v);
+    }
+    
+    var imgTags = '';
+    for (var j = 0; j < designImages.length; j++) {
+        imgTags += '<img src="' + designImages[j].data + '" style="max-width:180px;max-height:140px;margin:4px;border:1px solid #ddd;border-radius:4px;">';
+    }
+    
+    var hargaS = document.getElementById('hargaSatuan').value;
+    var uangM = document.getElementById('uangMuka').value;
+    var sisaB = document.getElementById('sisaBayar').value;
+    var sumTotal = document.getElementById('sumTotal').value;
+
+    var hargaS = document.getElementById('hargaSatuan').value;
+    var uangM = document.getElementById('uangMuka').value;
+    var sisaB = document.getElementById('sisaBayar').value;
+    var sumTotal = document.getElementById('sumTotal').value;
+
+    var hargaS = document.getElementById('hargaSatuan').value;
+    var uangM = document.getElementById('uangMuka').value;
+    var sisaB = document.getElementById('sisaBayar').value;
+    var sumTotal = document.getElementById('sumTotal').value;
+
+    var now = new Date().toLocaleDateString('id-ID', {year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit'});
+    
+    var pdfHTML = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>KLMX Order Form</title><style>' +
+        'body {font-family: Segoe UI, Arial, sans-serif; margin: 30px; color: #111; max-width: 700px; margin: 0 auto;}' +
+        'h1 {color:#1B2A4A; border-bottom:3px solid #F47B20; padding-bottom:8px; font-size:22px;}' +
+        '.info {background:#F5F6FA; padding:12px; border-radius:8px; margin:10px 0;}' +
+        '.info p {margin:4px 0;}' +
+        '.label {font-weight:bold; color:#1B2A4A;}' +
+        '.section {margin:16px 0; padding:12px; border:1px solid #ddd; border-radius:8px;}' +
+        '.total {background:#E8F5E9; border:2px solid #66BB6A; text-align:center; padding:16px; border-radius:8px; margin-top:16px;}' +
+        '.total h2 {color:#2E7D32; margin:0;}' +
+        '.images {display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;}' +
+        '.footer {margin-top:24px; color:#999; font-size:11px; text-align:center; border-top:1px solid #ddd; padding-top:12px;}' +
+        '@media print { body { margin: 0; } }' +
+        '</style></head><body>' +
+        '<h1>&#x1F4CB; KLMX ORDER FORM</h1>' +
+        '<p style="color:#666;">Konveksi & Sablon Depok - Form Pesanan Resmi</p>' +
+        '<p style="color:#666;">Tanggal: ' + now + '</p>' +
+        '<div class="info">' +
+        '<p><span class="label">Nama:</span> ' + nama + '</p>' +
+        '<p><span class="label">Telp:</span> ' + telp + '</p>' +
+        (email ? '<p><span class="label">Email:</span> ' + email + '</p>' : '') +
+        (tipe ? '<p><span class="label">Tipe:</span> ' + tipe + '</p>' : '') +
+        '</div>' +
+        '<div class="section">' +
+        '<p><span class="label">Produk:</span> ' + produkText + '</p>' +
+        '<p><span class="label">Bahan:</span> ' + (bahan||'-') + ' | <span class="label">Teknik:</span> ' + (teknik||'-') + '</p>' +
+        '<p><span class="label">Jumlah:</span> ' + jumlah + ' pcs</p>' +
+        (warna ? '<p><span class="label">Warna:</span> ' + warna + '</p>' : '') +
+        (deadline ? '<p><span class="label">Deadline:</span> ' + deadline + '</p>' : '') +
+        (sizeBreakdown.length ? '<p><span class="label">Ukuran:</span> ' + sizeBreakdown.join(', ') + '</p>' : '') +
+        (desain ? '<p><span class="label">Catatan:</span> ' + desain + '</p>' : '') +
+        '</div>' +
+        (sumTotal ? '<div class="section" style="border:2px solid #F47B20;background:#FFF8F0;"><p class="label" style="font-size:1.1rem;">PEMBAYARAN</p>' +
+        (hargaS ? '<p><span class="label">Harga Satuan:</span> Rp ' + parseInt(hargaS).toLocaleString('id') + ' /pcs</p>' : '') +
+        '<p><span class="label">Total Pembayaran:</span> ' + sumTotal + '</p>' +
+        (uangM && parseInt(uangM) > 0 ? '<p><span class="label">Uang Muka (DP):</span> Rp ' + parseInt(uangM).toLocaleString('id') + '</p><p><span class="label">Sisa Pembayaran:</span> ' + sisaB + '</p>' : '<p style="color:#E65100;font-size:0.85rem;">* DP minimal 50% saat order, pelunasan saat barang jadi.</p>') +
+        '</div>' : '') +
+        (imgTags ? '<div class="section"><p class="label">&#x1F5BC; Desain Terlampir:</p><div class="images">' + imgTags + '</div></div>' : '') +
+        '<div class="footer">KLMX Konveksi & Sablon | Jl. Kartini, Sukmajaya, Depok | WA: 0896-3776-7678 | jojoklmx@gmail.com</div>' +
+        '</body></html>';
+    
+    var blob = new Blob([pdfHTML], {type:'text/html'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'ORDER_' + nama.replace(/\s/g,'_') + '_' + new Date().toISOString().slice(0,10) + '.html';
+    a.click();
+    URL.revokeObjectURL(url);
+    alert('Order tersimpan! Buka file .html lalu Ctrl+P > Save as PDF untuk simpan sebagai PDF resmi.');
+}
+
+
+function calcPayment() {
+    var harga = parseInt(document.getElementById('hargaSatuan').value) || 0;
+    var jumlah = parseInt(document.getElementById('sumJumlah').value) || 0;
+    var total = harga * jumlah;
+    document.getElementById('sumTotal').value = total ? 'Rp ' + total.toLocaleString('id') : '';
+    
+    var dp = parseInt(document.getElementById('uangMuka').value) || 0;
+    var sisa = total - dp;
+    document.getElementById('sisaBayar').value = (total && dp) ? 'Rp ' + sisa.toLocaleString('id') : (total ? 'Rp ' + total.toLocaleString('id') + ' (belum ada DP)' : '');
+}
+
+function calcPayment() {
+    var harga = parseInt(document.getElementById('hargaSatuan').value) || 0;
+    var jumlah = parseInt(document.getElementById('sumJumlah').value) || 0;
+    var total = harga * jumlah;
+    document.getElementById('sumTotal').value = total ? 'Rp ' + total.toLocaleString('id') : '';
+    
+    var dp = parseInt(document.getElementById('uangMuka').value) || 0;
+    var sisa = total - dp;
+    document.getElementById('sisaBayar').value = (total && dp) ? 'Rp ' + sisa.toLocaleString('id') : (total ? 'Rp ' + total.toLocaleString('id') + ' (belum ada DP)' : '');
 }
 
 let designImages = [];
@@ -617,6 +824,34 @@ function submitWA() {
         }
     }
     
+    var hargaS = document.getElementById('hargaSatuan').value;
+    var totalP = document.getElementById('sumTotal').value;
+    var uangM = document.getElementById('uangMuka').value;
+    var sisaB = document.getElementById('sisaBayar').value;
+    if (totalP) {
+        msg += '\n*PEMBAYARAN*\n';
+        if (hargaS) msg += '*Harga/pcs:* Rp ' + parseInt(hargaS).toLocaleString('id') + '\n';
+        msg += '*Total:* ' + totalP + '\n';
+        if (uangM && parseInt(uangM) > 0) {
+            msg += '*Uang Muka:* Rp ' + parseInt(uangM).toLocaleString('id') + '\n';
+            msg += '*Sisa:* ' + sisaB + '\n';
+        }
+    }
+    
+    var hargaS = document.getElementById('hargaSatuan').value;
+    var totalP = document.getElementById('sumTotal').value;
+    var uangM = document.getElementById('uangMuka').value;
+    var sisaB = document.getElementById('sisaBayar').value;
+    if (totalP) {
+        msg += '\n*PEMBAYARAN*\n';
+        if (hargaS) msg += '*Harga/pcs:* Rp ' + parseInt(hargaS).toLocaleString('id') + '\n';
+        msg += '*Total:* ' + totalP + '\n';
+        if (uangM && parseInt(uangM) > 0) {
+            msg += '*Uang Muka:* Rp ' + parseInt(uangM).toLocaleString('id') + '\n';
+            msg += '*Sisa:* ' + sisaB + '\n';
+        }
+    }
+    
     var wa = '6289637767678';
     window.open('https://wa.me/' + wa + '?text=' + encodeURIComponent(msg), '_blank');
 }
@@ -627,5 +862,35 @@ document.getElementById('jumlah').addEventListener('keyup', function(e){
     updateSummary();
 });
 </script>
+    <!-- PWA Install -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('https://jojoklmx.github.io/klmx-web/sw.js')
+                    .then(function(reg) { console.log('SW registered:', reg.scope); })
+                    .catch(function(err) { console.log('SW failed:', err); });
+            });
+        }
+        // Show install prompt on Android/iOS
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            deferredPrompt = e;
+            var btn = document.createElement('div');
+            btn.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999;'+
+                'background:#F47B20;color:white;padding:14px 28px;border-radius:30px;font-weight:bold;'+
+                'cursor:pointer;box-shadow:0 4px 20px rgba(244,123,32,0.4);font-size:15px;'+
+                'animation:pulse 2s infinite;';
+            btn.textContent = '📲 Install Aplikasi KLMX';
+            btn.onclick = function() {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(function(result) {
+                    if (result.outcome === 'accepted') { btn.remove(); }
+                    deferredPrompt = null;
+                });
+            };
+            document.body.appendChild(btn);
+        });
+    </script>
 </body>
 </html>

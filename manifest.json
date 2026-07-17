@@ -1,0 +1,26 @@
+{
+  "name": "KLMX Order Form",
+  "short_name": "KLMX Order",
+  "description": "Form pemesanan konveksi & sablon - KLMX Depok",
+  "start_url": "https://jojoklmx.github.io/klmx-web/order.html",
+  "scope": "https://jojoklmx.github.io/klmx-web/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1B2A4A",
+  "theme_color": "#1B2A4A",
+  "lang": "id",
+  "icons": [
+    {
+      "src": "https://jojoklmx.github.io/klmx-web/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://jojoklmx.github.io/klmx-web/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
