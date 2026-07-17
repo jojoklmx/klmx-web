@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Form — KLMX Konveksi</title>
+    <style>
+        :root { --navy: #1B2A4A; --orange: #F47B20; --green: #4CAF50; --light: #F8F9FB; --gray: #6B7280; --white: #FFF; --border: #E0E4EA; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Segoe UI',system-ui,sans-serif; background:#EEF1F5; color:#1a1a1a; }
+        .app { max-width:720px; margin:0 auto; padding:16px; }
+        .nav { display:flex; gap:0; background:white; border-radius:14px; overflow:hidden; margin-bottom:20px; box-shadow:0 1px 4px rgba(0,0,0,.06); }
+        .nav button { flex:1; padding:14px; border:none; background:white; font-weight:700; font-size:.9rem; cursor:pointer; color:var(--gray); transition:.2s; font-family:inherit; }
+        .nav button.active { background:var(--navy); color:white; }
+        .card { background:white; border-radius:14px; padding:24px; box-shadow:0 1px 4px rgba(0,0,0,.06); margin-bottom:14px; }
+        .card h2 { font-size:1.1rem; color:var(--navy); margin-bottom:16px; padding-bottom:10px; border-bottom:3px solid var(--orange); display:flex; align-items:center; gap:8px; }
+        .row { display:flex; gap:12px; flex-wrap:wrap; }
+        .field { flex:1; min-width:160px; margin-bottom:12px; }
+        .field label { display:block; font-size:.78rem; font-weight:700; color:var(--navy); margin-bottom:4px; }
+        .field label .req { color:#E53935; }
+        .field input,.field select,.field textarea { width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:.92rem; font-family:inherit; transition:.2s; background:var(--light); }
+        .field input:focus,.field select:focus,.field textarea:focus { outline:none; border-color:var(--orange); background:white; box-shadow:0 0 0 3px rgba(244,123,32,.08); }
+        .field textarea { resize:vertical; min-height:60px; }
+        .field input[readonly] { background:#E8EDF2; font-weight:700; color:var(--navy); }
+        .field input.total { background:#E8F5E9; font-size:1.1rem; color:#2E7D32; }
+        .field input.sisa { background:#FFF3E0; font-size:1.05rem; color:#E65100; }
+        .size-row { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+        .size-row .sz { text-align:center; }
+        .size-row .sz label { font-size:.7rem; font-weight:700; color:var(--navy); }
+        .size-row .sz input { width:100%; text-align:center; padding:7px 2px; background:var(--light); border:1.5px solid var(--border); border-radius:6px; font-size:.85rem; }
+        .upload-box { border:2px dashed var(--orange); border-radius:12px; padding:20px; text-align:center; cursor:pointer; background:#FFF8F0; transition:.2s; }
+        .upload-box:hover { background:#FFF0E0; }
+        .upload-box .big { font-size:2rem; }
+        .previews { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+        .previews .thumb { width:80px; height:70px; border-radius:8px; overflow:hidden; position:relative; border:1px solid var(--border); }
+        .previews .thumb img { width:100%; height:100%; object-fit:cover; }
+        .previews .thumb .x { position:absolute; top:1px; right:1px; background:#E53935; color:white; border:none; border-radius:50%; width:18px; height:18px; font-size:11px; cursor:pointer; line-height:18px; }
+        .btn-row { display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
+        .btn { flex:1; min-width:120px; padding:13px 20px; border:none; border-radius:10px; font-weight:700; font-size:.92rem; cursor:pointer; transition:.2s; font-family:inherit; text-align:center; }
+        .btn-print { background:var(--navy); color:white; }
+        .btn-print:hover { background:#2A3F6E; }
+        .btn-save { background:var(--orange); color:white; }
+        .btn-save:hover { background:#D65D0E; }
+        .btn-reset { background:#E5E7EB; color:#555; }
+        .btn-wa { background:#25D366; color:white; }
+        .table-wrap { overflow-x:auto; }
+        table { width:100%; border-collapse:collapse; font-size:.8rem; }
+        table th { background:var(--navy); color:white; padding:10px 8px; text-align:left; font-size:.75rem; position:sticky; top:0; }
+        table td { padding:8px; border-bottom:1px solid var(--border); }
+        table tr:hover td { background:#F5F7FA; }
+        .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:.7rem; font-weight:700; }
+        .badge-dp { background:#FFF3E0; color:#E65100; }
+        .badge-lunas { background:#E8F5E9; color:#2E7D32; }
+        .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px; }
+        .btn-xs { padding:8px 18px; border:none; border-radius:8px; font-weight:700; font-size:.8rem; cursor:pointer; font-family:inherit; }
+        .btn-excel { background:#217346; color:white; }
+        .btn-clear { background:#f5f5f5; color:#999; font-size:.75rem; }
+        .empty { text-align:center; padding:60px 20px; color:var(--gray); }
+        .empty .icon { font-size:3rem; }
+        .count { font-size:.8rem; color:var(--gray); }
+        @media (max-width:500px) { .card { padding:16px; } .size-row { grid-template-columns:repeat(4,1fr); } }
+    </style>
+</head>
+<body>
+<div class="app">
+    <div class="nav">
+        <button id="btnForm" class="active" onclick="showView('form')">📋 Form Order</button>
+        <button id="btnData" onclick="showView('data')">📊 Data Pesanan</button>
+    </div>
+
+    <div id="viewForm">
+        <div class="card">
+            <h2>📝 Pemesan</h2>
+            <div class="row">
+                <div class="field"><label><span class="req">*</span> Nama / Perusahaan</label><input id="nama" placeholder="PT. Maju Jaya"></div>
+                <div class="field"><label><span class="req">*</span> WA / Telepon</label><input id="telp" placeholder="0812-xxxx"></div>
+            </div>
+            <div class="row">
+                <div class="field"><label>Email</label><input id="email" type="email" placeholder="opsional"></div>
+                <div class="field"><label>Instansi</label>
+                    <select id="tipe"><option value="">- Pilih -</option><option>Perusahaan</option><option>Instansi Pemerintah</option><option>Sekolah / Kampus</option><option>Komunitas</option><option>Event Organizer</option><option>Perorangan</option></select>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>👕 Produk</h2>
+            <div class="row">
+                <div class="field"><label><span class="req">*</span> Jenis Produk</label>
+                    <select id="produk" onchange="autoHarga()"><option value="">- Pilih -</option><option value="65000">Kaos Oblong / T-Shirt</option><option value="85000">Kaos Polo</option><option value="95000">Kemeja / PDH</option><option value="135000">Jaket / Rompi</option><option value="120000">Hoodie / Sweater</option><option value="130000">Set Seragam Olahraga</option><option value="110000">Wearpack</option><option value="35000">Totebag</option><option value="0">Lainnya</option></select>
+                </div>
+                <div class="field"><label>Bahan</label>
+                    <select id="bahan"><option value="">- Pilih -</option><option>Cotton Combed 30s</option><option>Cotton Combed 24s</option><option>Dry Fit</option><option>PE</option><option>CVC</option><option>Pique</option><option>Oxford</option><option>Drill</option><option>Taslan</option><option>Fleece</option><option>Canvas</option><option>Belum Tahu</option></select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="field"><label>Teknik Sablon</label>
+                    <select id="teknik"><option value="">- Pilih -</option><option>DTF Full Color</option><option>DTG</option><option>Bordir Komputer</option><option>Cutting Polyflex</option><option>Sablon Rubber</option><option>Kombinasi</option><option>Belum Tahu</option></select>
+                </div>
+                <div class="field"><label>Warna</label><input id="warna" placeholder="Hitam, Navy, dll"></div>
+            </div>
+            <div class="row">
+                <div class="field"><label>Deadline</label><input type="date" id="deadline"></div>
+                <div class="field"><label>Catatan Desain</label><input id="desain" placeholder="Posisi logo, jumlah warna..."></div>
+            </div>
+            <label style="font-weight:700;color:var(--navy);font-size:.78rem;display:block;margin:12px 0 6px;">📐 Breakdown Ukuran</label>
+            <div class="size-row">
+                <div class="sz"><label>S</label><input type="number" id="s_s" value="0" min="0" oninput="sumSizes()"></div>
+                <div class="sz"><label>M</label><input type="number" id="s_m" value="0" min="0" oninput="sumSizes()"></div>
+                <div class="sz"><label>L</label><input type="number" id="s_l" value="0" min="0" oninput="sumSizes()"></div>
+                <div class="sz"><label>XL</label><input type="number" id="s_xl" value="0" min="0" oninput="sumSizes()"></div>
+                <div class="sz"><label>XXL</label><input type="number" id="s_xxl" value="0" min="0" oninput="sumSizes()"></div>
+                <div class="sz"><label>XXXL</label><input type="number" id="s_xxxl" value="0" min="0" oninput="sumSizes()"></div>
+                <div class="sz"><label>Anak</label><input type="number" id="s_anak" value="0" min="0" oninput="sumSizes()"></div>
+            </div>
+            <div id="sizeTotal" style="font-size:.75rem;color:var(--gray);margin-top:6px;">Total: 0 pcs</div>
+        </div>
+
+        <div class="card">
+            <h2>💰 Pembayaran</h2>
+            <div class="row">
+                <div class="field"><label><span class="req">*</span> Harga Satuan (Rp)</label><input id="hargaSatuan" type="number" placeholder="Harga per pcs" min="0" oninput="hitung()"></div>
+                <div class="field"><label>Jumlah Order (pcs)</label><input id="jumlah" type="number" readonly></div>
+            </div>
+            <div class="row">
+                <div class="field"><label>Total Pembayaran</label><input id="total" class="total" readonly></div>
+                <div class="field"><label><span class="req">*</span> Uang Muka / DP (Rp)</label><input id="dp" type="number" placeholder="Min. 50%" min="0" oninput="hitung()"></div>
+            </div>
+            <div class="row">
+                <div class="field">
+                    <label>Metode Pembayaran</label>
+                    <div style="display:flex;gap:18px;padding-top:6px;">
+                        <label style="display:flex;align-items:center;gap:5px;font-weight:500;cursor:pointer;"><input type="radio" name="metode" value="Transfer" checked>🏦 Transfer</label>
+                        <label style="display:flex;align-items:center;gap:5px;font-weight:500;cursor:pointer;"><input type="radio" name="metode" value="Cash">💵 Cash</label>
+                    </div>
+                </div>
+                <div class="field"><label>Sisa Pembayaran</label><input id="sisa" class="sisa" readonly></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🖼️ Upload Desain (Acuan Produksi)</h2>
+            <div class="upload-box" onclick="document.getElementById('fileIn').click()">
+                <div class="big">📁</div>
+                <div style="font-weight:700;color:var(--navy);">Klik / Drag & Drop Gambar</div>
+                <div style="font-size:.78rem;color:var(--gray);">JPG,PNG,WEBP — Maks 5 file</div>
+                <input type="file" id="fileIn" multiple accept="image/*" style="display:none" onchange="tambahGambar(this.files)">
+            </div>
+            <div class="previews" id="previews"></div>
+        </div>
+
+        <div class="btn-row">
+            <button class="btn btn-print" onclick="cetak()">🖨️ Cetak</button>
+            <button class="btn btn-save" onclick="simpan()">💾 Simpan Pesanan</button>
+            <button class="btn btn-wa" onclick="kirimWA()">📲 WhatsApp</button>
+            <button class="btn btn-reset" onclick="resetForm()">🔄 Reset</button>
+        </div>
+    </div>
+
+    <div id="viewData" style="display:none;">
+        <div class="card">
+            <div class="top-bar">
+                <h2 style="margin:0;padding:0;border:none;">📊 Data Pesanan Masuk</h2>
+                <div style="display:flex;gap:8px;">
+                    <button class="btn-xs btn-excel" onclick="exportExcel()">📥 Export Excel</button>
+                    <button class="btn-xs btn-clear" onclick="hapusSemua()">🗑 Hapus Semua</button>
+                </div>
+            </div>
+            <div class="table-wrap" id="tableContainer">
+                <div class="empty"><div class="icon">📭</div><h3>Belum ada pesanan</h3><p>Simpan pesanan dari tab Form Order</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let gambar = [];
+
+function showView(v) {
+    document.getElementById('viewForm').style.display = v==='form'?'block':'none';
+    document.getElementById('viewData').style.display = v==='data'?'block':'none';
+    document.getElementById('btnForm').classList.toggle('active', v==='form');
+    document.getElementById('btnData').classList.toggle('active', v==='data');
+    if (v==='data') renderTabel();
+}
+
+function tambahGambar(files) {
+    for (let f of files) {
+        if (gambar.length >= 5) { alert('Maks 5 file!'); break; }
+        if (!f.type.startsWith('image/')) continue;
+        let r = new FileReader();
+        r.onload = e => { gambar.push({nama:f.name, data:e.target.result}); renderGambar(); };
+        r.readAsDataURL(f);
+    }
+    document.getElementById('fileIn').value = '';
+}
+
+function renderGambar() {
+    document.getElementById('previews').innerHTML = gambar.map((g,i) => '<div class="thumb"><img src="'+g.data+'" alt="'+g.nama+'"><button class="x" onclick="hapusGambar('+i+')">&times;</button></div>').join('');
+}
+
+function hapusGambar(i) { gambar.splice(i,1); renderGambar(); }
+
+(function(){
+    let ub = document.querySelector('.upload-box');
+    ub.addEventListener('dragover', e => { e.preventDefault(); ub.style.background='#FFE0C0'; });
+    ub.addEventListener('dragleave', () => ub.style.background='#FFF8F0');
+    ub.addEventListener('drop', e => { e.preventDefault(); ub.style.background='#FFF8F0'; tambahGambar(e.dataTransfer.files); });
+})();
+
+function sumSizes() {
+    let ids = ['s_s','s_m','s_l','s_xl','s_xxl','s_xxxl','s_anak'];
+    let total = ids.reduce((s,id) => s + (parseInt(document.getElementById(id).value)||0), 0);
+    document.getElementById('sizeTotal').textContent = 'Total: ' + total + ' pcs';
+    document.getElementById('jumlah').value = total || '';
+    hitung();
+}
+
+function hitung() {
+    let harga = parseInt(document.getElementById('hargaSatuan').value) || 0;
+    let jml = parseInt(document.getElementById('jumlah').value) || 0;
+    let total = harga * jml;
+    document.getElementById('total').value = total ? 'Rp ' + total.toLocaleString('id') : '';
+    let dp = parseInt(document.getElementById('dp').value) || 0;
+    let sisa = total - dp;
+    document.getElementById('sisa').value = (total && dp) ? 'Rp ' + sisa.toLocaleString('id') : (total ? 'Rp ' + total.toLocaleString('id') + ' (blm DP)' : '');
+}
+
+function autoHarga() {
+    let v = document.getElementById('produk').value;
+    if (v && v !== '0') document.getElementById('hargaSatuan').value = v;
+    sumSizes();
+}
+
+function cetak() {
+    let n = document.getElementById('nama').value.trim();
+    if (!n) return alert('⚠ Nama harus diisi!');
+    let pText = document.getElementById('produk').selectedOptions[0]?.text || '-';
+    let now = new Date().toLocaleString('id-ID');
+    let metode = document.querySelector('input[name="metode"]:checked')?.value || '-';
+    let size = [];
+    ['S','M','L','XL','XXL','XXXL','Anak'].forEach((l,i) => {
+        let v = parseInt(document.getElementById(['s_s','s_m','s_l','s_xl','s_xxl','s_xxxl','s_anak'][i]).value)||0;
+        if(v>0) size.push(l+':'+v);
+    });
+    let imgs = gambar.map(g => '<img src="'+g.data+'" style="max-width:180px;max-height:140px;margin:4px;border:1px solid #ddd;border-radius:6px;"><br><small>'+g.nama+'</small>').join('');
+    let h = document.getElementById('hargaSatuan').value;
+    let t = document.getElementById('total').value;
+    let d = document.getElementById('dp').value;
+    let s = document.getElementById('sisa').value;
+
+    let html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>KLMX Order - '+n+'</title><style>body{font-family:"Segoe UI",sans-serif;max-width:700px;margin:20px auto;padding:10px;color:#111;}h1{color:#1B2A4A;border-bottom:3px solid #F47B20;padding-bottom:8px;}.s{margin:12px 0;padding:12px;border:1px solid #ddd;border-radius:8px;}.s h3{margin:0 0 8px;color:#1B2A4A;}.l{font-weight:700;color:#1B2A4A;}.pay{border:2px solid #F47B20;background:#FFF8F0;}.pay .big{font-size:1.1rem;font-weight:800;color:#2E7D32;}.f{margin-top:20px;color:#999;font-size:11px;text-align:center;border-top:1px solid #ddd;padding-top:10px;}@media print{body{margin:0;}@page{margin:12mm;}}</style></head><body><h1>📋 KLMX ORDER FORM</h1><p style="color:#666;">'+now+' | WA: 0896-3776-7678</p><div class="s"><h3>📝 Pemesan</h3><p><span class="l">Nama:</span> <strong>'+n+'</strong></p><p><span class="l">Telp:</span> '+document.getElementById('telp').value+'</p>'+(document.getElementById('email').value?'<p><span class="l">Email:</span> '+document.getElementById('email').value+'</p>':'')+(document.getElementById('tipe').value?'<p><span class="l">Tipe:</span> '+document.getElementById('tipe').value+'</p>':'')+'</div><div class="s"><h3>👕 Produk</h3><p><span class="l">Produk:</span> <strong>'+pText+'</strong></p><p><span class="l">Jumlah:</span> '+(document.getElementById('jumlah').value||0)+' pcs</p><p><span class="l">Bahan:</span> '+(document.getElementById('bahan').value||'-')+' | <span class="l">Teknik:</span> '+(document.getElementById('teknik').value||'-')+'</p>'+(document.getElementById('warna').value?'<p><span class="l">Warna:</span> '+document.getElementById('warna').value+'</p>':'')+(document.getElementById('deadline').value?'<p><span class="l">Deadline:</span> '+document.getElementById('deadline').value+'</p>':'')+(size.length?'<p><span class="l">Ukuran:</span> '+size.join(', ')+'</p>':'')+(document.getElementById('desain').value?'<p><span class="l">Catatan:</span> '+document.getElementById('desain').value+'</p>':'')+'</div>'+(t?'<div class="s pay"><h3>💰 Pembayaran ('+metode+')</h3>'+(h?'<p><span class="l">Harga Satuan:</span> Rp '+parseInt(h).toLocaleString('id')+' /pcs</p>':'')+'<p><span class="l">Total:</span> <span class="big">'+t+'</span></p>'+(d&&parseInt(d)>0?'<p><span class="l">DP:</span> Rp '+parseInt(d).toLocaleString('id')+'</p><p><span class="l">Sisa:</span> <span style="color:#E65100;font-weight:800;">'+s+'</span></p>':'')+'</div>':'')+(imgs?'<div class="s"><h3>🖼️ Desain</h3>'+imgs+'</div>':'')+'<div class="f">KLMX Konveksi & Sablon | Jl. Kartini, Sukmajaya, Depok | 0896-3776-7678 | jojoklmx@gmail.com</div></body></html>';
+    let w = window.open('','_blank','width=800,height=600');
+    w.document.write(html); w.document.close(); w.focus();
+    setTimeout(()=>w.print(), 600);
+}
+
+function simpan() {
+    let n = document.getElementById('nama').value.trim();
+    let t = document.getElementById('telp').value.trim();
+    if (!n) return alert('⚠ Nama harus diisi!');
+    if (!t) return alert('⚠ WA/Telepon harus diisi!');
+
+    let order = {
+        id: 'ORD-'+Date.now().toString(36).toUpperCase().slice(-6),
+        tgl: new Date().toISOString().slice(0,10),
+        nama: n, telp: t,
+        email: document.getElementById('email').value,
+        tipe: document.getElementById('tipe').value,
+        produk: document.getElementById('produk').selectedOptions[0]?.text||'-',
+        bahan: document.getElementById('bahan').value,
+        teknik: document.getElementById('teknik').value,
+        warna: document.getElementById('warna').value,
+        deadline: document.getElementById('deadline').value,
+        desain: document.getElementById('desain').value,
+        jumlah: document.getElementById('jumlah').value||0,
+        hargaSatuan: document.getElementById('hargaSatuan').value||0,
+        total: document.getElementById('total').value,
+        dp: document.getElementById('dp').value||0,
+        sisa: document.getElementById('sisa').value,
+        metode: document.querySelector('input[name="metode"]:checked')?.value||'-',
+        gambar: gambar.map(g => g.nama).join(', '),
+        gambarData: gambar.map(g => g.data)
+    };
+
+    let data = JSON.parse(localStorage.getItem('klmx_orders')||'[]');
+    data.unshift(order);
+    localStorage.setItem('klmx_orders', JSON.stringify(data));
+    alert('✅ Pesanan '+order.id+' tersimpan!
+
+Lihat di tab "Data Pesanan"');
+    resetForm();
+}
+
+function resetForm() {
+    ['nama','telp','email','warna','desain','hargaSatuan','dp'].forEach(id => document.getElementById(id).value='');
+    ['tipe','produk','bahan','teknik'].forEach(id => document.getElementById(id).value='');
+    document.getElementById('deadline').value='';
+    document.getElementById('total').value='';
+    document.getElementById('sisa').value='';
+    document.getElementById('jumlah').value='';
+    ['s_s','s_m','s_l','s_xl','s_xxl','s_xxxl','s_anak'].forEach(id => document.getElementById(id).value='0');
+    document.getElementById('sizeTotal').textContent='Total: 0 pcs';
+    document.querySelector('input[name="metode"][value="Transfer"]').checked=true;
+    gambar=[]; renderGambar();
+}
+
+function kirimWA() {
+    let n = document.getElementById('nama').value.trim();
+    if (!n) return alert('⚠ Nama harus diisi!');
+    let pText = document.getElementById('produk').selectedOptions[0]?.text||'-';
+    let metode = document.querySelector('input[name="metode"]:checked')?.value||'-';
+    let size = [];
+    ['S','M','L','XL','XXL','XXXL','Anak'].forEach((l,i) => {
+        let v = parseInt(document.getElementById(['s_s','s_m','s_l','s_xl','s_xxl','s_xxxl','s_anak'][i]).value)||0;
+        if(v>0) size.push(l+':'+v);
+    });
+    let msg = '*ORDER KONVEKSI — KLMX*
+
+*Pemesan:* '+n+'
+*Telp:* '+document.getElementById('telp').value+'
+'+(document.getElementById('tipe').value?'*Tipe:* '+document.getElementById('tipe').value+'
+':'')+'
+*PRODUK*
+*Jenis:* '+pText+'
+*Jumlah:* '+(document.getElementById('jumlah').value||0)+' pcs
+'+(document.getElementById('bahan').value?'*Bahan:* '+document.getElementById('bahan').value+'
+':'')+(document.getElementById('teknik').value?'*Teknik:* '+document.getElementById('teknik').value+'
+':'')+(document.getElementById('warna').value?'*Warna:* '+document.getElementById('warna').value+'
+':'')+(size.length?'*Ukuran:* '+size.join(', ')+'
+':'')+(document.getElementById('desain').value?'*Catatan:* '+document.getElementById('desain').value+'
+':'');
+    let t = document.getElementById('total').value;
+    if (t) { msg += '
+*PEMBAYARAN*
+*Metode:* '+metode+'
+'; if (document.getElementById('hargaSatuan').value) msg += '*Harga/pcs:* Rp '+parseInt(document.getElementById('hargaSatuan').value).toLocaleString('id')+'
+'; msg += '*Total:* '+t+'
+'; let d = document.getElementById('dp').value; if (d&&parseInt(d)>0) { msg += '*DP:* Rp '+parseInt(d).toLocaleString('id')+'
+*Sisa:* '+document.getElementById('sisa').value+'
+'; } }
+    window.open('https://wa.me/6289637767678?text='+encodeURIComponent(msg), '_blank');
+}
+
+function renderTabel() {
+    let data = JSON.parse(localStorage.getItem('klmx_orders')||'[]');
+    let c = document.getElementById('tableContainer');
+    if (!data.length) { c.innerHTML='<div class="empty"><div class="icon">📭</div><h3>Belum ada pesanan</h3><p>Simpan pesanan dari tab Form Order</p></div>'; return; }
+    c.innerHTML = '<div class="count">'+data.length+' pesanan</div><table><thead><tr><th>ID</th><th>Tgl</th><th>Pemesan</th><th>Produk</th><th>Jml</th><th>Total</th><th>Status</th><th>Bayar</th><th></th><th></th></tr></thead><tbody>'+data.map(o => '<tr><td><strong>'+o.id+'</strong></td><td>'+o.tgl+'</td><td><strong>'+o.nama+'</strong><br><small style="color:var(--gray)">'+o.telp+'</small></td><td>'+o.produk+'</td><td>'+o.jumlah+' pcs</td><td>'+(o.total||'-')+'</td><td><span class="badge '+(o.dp&&parseInt(o.dp)>0?'badge-dp':'badge-lunas')+'">'+(o.dp&&parseInt(o.dp)>0?'DP':'Lunas')+'</span></td><td>'+o.metode+'</td><td><button onclick="cetakUlang(''+o.id+'')" style="background:#1B2A4A;color:white;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:.7rem;">🖨️</button></td><td><button onclick="hapusSatu(''+o.id+'')" style="background:none;border:none;cursor:pointer;font-size:1rem;">🗑</button></td></tr>').join('')+'</tbody></table>';
+}
+
+function cetakUlang(id) {
+    let o = JSON.parse(localStorage.getItem('klmx_orders')||'[]').find(d => d.id===id);
+    if (!o) return;
+    let imgs = (o.gambarData||[]).map((d,i) => '<img src="'+d+'" style="max-width:180px;max-height:140px;margin:4px;border:1px solid #ddd;border-radius:6px;"><br><small>'+(o.gambar.split(', ')[i]||'')+'</small>').join('');
+    let html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>KLMX Order - '+o.nama+'</title><style>body{font-family:"Segoe UI",sans-serif;max-width:700px;margin:20px auto;padding:10px;color:#111;}h1{color:#1B2A4A;border-bottom:3px solid #F47B20;padding-bottom:8px;}.s{margin:12px 0;padding:12px;border:1px solid #ddd;border-radius:8px;}.s h3{margin:0 0 8px;color:#1B2A4A;}.l{font-weight:700;color:#1B2A4A;}.pay{border:2px solid #F47B20;background:#FFF8F0;}.pay .big{font-size:1.1rem;font-weight:800;color:#2E7D32;}.f{margin-top:20px;color:#999;font-size:11px;text-align:center;border-top:1px solid #ddd;padding-top:10px;}@media print{body{margin:0;}@page{margin:12mm;}}</style></head><body><h1>📋 KLMX ORDER FORM</h1><p style="color:#666;">'+o.tgl+' | WA: 0896-3776-7678</p><div class="s"><h3>📝 Pemesan</h3><p><span class="l">Nama:</span> <strong>'+o.nama+'</strong></p><p><span class="l">Telp:</span> '+o.telp+'</p>'+(o.email?'<p><span class="l">Email:</span> '+o.email+'</p>':'')+(o.tipe?'<p><span class="l">Tipe:</span> '+o.tipe+'</p>':'')+'</div><div class="s"><h3>👕 Produk</h3><p><span class="l">Produk:</span> <strong>'+o.produk+'</strong></p><p><span class="l">Jumlah:</span> '+o.jumlah+' pcs</p><p><span class="l">Bahan:</span> '+(o.bahan||'-')+' | <span class="l">Teknik:</span> '+(o.teknik||'-')+'</p>'+(o.warna?'<p><span class="l">Warna:</span> '+o.warna+'</p>':'')+(o.deadline?'<p><span class="l">Deadline:</span> '+o.deadline+'</p>':'')+(o.desain?'<p><span class="l">Catatan:</span> '+o.desain+'</p>':'')+'</div>'+(o.total?'<div class="s pay"><h3>💰 Pembayaran ('+o.metode+')</h3>'+(o.hargaSatuan?'<p><span class="l">Harga Satuan:</span> Rp '+parseInt(o.hargaSatuan).toLocaleString('id')+' /pcs</p>':'')+'<p><span class="l">Total:</span> <span class="big">'+o.total+'</span></p>'+(o.dp&&parseInt(o.dp)>0?'<p><span class="l">DP:</span> Rp '+parseInt(o.dp).toLocaleString('id')+'</p><p><span class="l">Sisa:</span> <span style="color:#E65100;font-weight:800;">'+o.sisa+'</span></p>':'')+'</div>':'')+(imgs?'<div class="s"><h3>🖼️ Desain</h3>'+imgs+'</div>':'')+'<div class="f">KLMX Konveksi & Sablon | Jl. Kartini, Sukmajaya, Depok | 0896-3776-7678 | jojoklmx@gmail.com</div></body></html>';
+    let w = window.open('','_blank','width=800,height=600');
+    w.document.write(html); w.document.close(); w.focus();
+    setTimeout(()=>w.print(), 600);
+}
+
+function hapusSatu(id) {
+    if (!confirm('Hapus pesanan ini?')) return;
+    let data = JSON.parse(localStorage.getItem('klmx_orders')||'[]').filter(d => d.id!==id);
+    localStorage.setItem('klmx_orders', JSON.stringify(data));
+    renderTabel();
+}
+
+function hapusSemua() {
+    if (!confirm('HAPUS SEMUA pesanan? Tidak bisa dikembalikan!')) return;
+    localStorage.removeItem('klmx_orders');
+    renderTabel();
+}
+
+function exportExcel() {
+    let data = JSON.parse(localStorage.getItem('klmx_orders')||'[]');
+    if (!data.length) return alert('Belum ada data!');
+    let csv = '﻿ID,Tanggal,Nama,Telp,Email,Tipe,Produk,Bahan,Teknik,Warna,Deadline,Jumlah,Harga Satuan,Total,DP,Sisa,Metode,Gambar,Catatan
+';
+    data.forEach(o => { csv += [o.id,o.tgl,'"'+o.nama+'"','"'+o.telp+'"',o.email,o.tipe,'"'+o.produk+'"',o.bahan,o.teknik,o.warna,o.deadline,o.jumlah,o.hargaSatuan,'"'+o.total+'"',o.dp,'"'+o.sisa+'"',o.metode,'"'+o.gambar+'"','"'+o.desain+'"'].join(',')+'
+'; });
+    let blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+    let a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'KLMX_Orders_'+new Date().toISOString().slice(0,10)+'.csv';
+    a.click();
+}
+
+sumSizes();
+</script>
+</body>
+</html>
